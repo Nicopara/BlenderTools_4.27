@@ -241,7 +241,6 @@
         "static_mesh_import_data": {
           "auto_generate_collision": true,
           "bake_pivot_in_vertex": false,
-          "build_nanite": false,
           "build_reversed_index_buffer": true,
           "combine_meshes": false,
           "compute_weighted_normals": true,
