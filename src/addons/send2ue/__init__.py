@@ -12,7 +12,7 @@ bl_info = {
     "name": "Send to Unreal",
     "author": "Epic Games Inc (now a community fork)",
     "version": (2, 6, 8),
-    "blender": (3, 6, 0),
+    "blender": (4, 0, 0),
     "location": "Header > Pipeline > Send to Unreal",
     "description": "Sends an asset to the first open Unreal Editor instance on your machine.",
     "warning": "",
