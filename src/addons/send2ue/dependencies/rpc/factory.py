@@ -157,7 +157,7 @@ class RPCFactory:
         if doc_string:
             joined = '\n'.join(code)
             joined = re.sub(r'\s*("""|\'\'\')[\s\S]*?\1', '', joined, count=1)
-            code = [line for line in joined.split('\n')]
+            code = joined.split('\n')
 
         return code
 
