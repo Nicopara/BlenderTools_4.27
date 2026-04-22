@@ -4,6 +4,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+import warnings
 from unittest import mock
 
 sys.path.append(
@@ -68,6 +69,25 @@ class TestRPCFactory(unittest.TestCase):
             self.assertNotIn('Single quoted docstring.', joined)
             self.assertNotIn("'''", joined)
             self.assertIn('return 7', joined)
+
+    def test_factory_module_has_no_invalid_escape_sequence_syntax_warning(self):
+        module_path = os.path.join(
+            os.path.dirname(__file__),
+            os.path.pardir,
+            'src',
+            'addons',
+            'send2ue',
+            'dependencies',
+            'rpc',
+            'factory.py'
+        )
+
+        with open(module_path, 'r', encoding='utf-8') as handle:
+            source = handle.read()
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('error', SyntaxWarning)
+            compile(source, module_path, 'exec')
 
 
 if __name__ == '__main__':
