@@ -1,8 +1,9 @@
 import os
+import sys
 import bpy
+import importlib.util
 from ..utilities import report_error
 from mathutils import Vector
-from importlib.machinery import SourceFileLoader
 
 SCALE_FACTOR = 100
 
@@ -20,10 +21,16 @@ def export(**keywords):
     addons = {os.path.basename(os.path.dirname(module.__file__)): module.__file__ for module in addon_utils.modules()}
     addon_folder_path = os.path.dirname(addons.get('io_scene_fbx'))
 
-    # this load the io_scene_fbx module from the blender FBX addon
+    # this loads the io_scene_fbx module from the blender FBX addon
     try:
-        SourceFileLoader('io_scene_fbx', os.path.join(addon_folder_path, '__init__.py')).load_module()
-    except RuntimeError as error:
+        if 'io_scene_fbx' not in sys.modules:
+            spec = importlib.util.spec_from_file_location(
+                'io_scene_fbx', os.path.join(addon_folder_path, '__init__.py')
+            )
+            mod = importlib.util.module_from_spec(spec)
+            sys.modules['io_scene_fbx'] = mod
+            spec.loader.exec_module(mod)
+    except (ImportError, AttributeError, OSError, RuntimeError) as error:
         print(error)
 
     import io_scene_fbx.export_fbx_bin as export_fbx_bin
