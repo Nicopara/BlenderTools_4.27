@@ -8,6 +8,8 @@
 [![Tests](https://github.com/poly-hammer/BlenderTools/actions/workflows/tests.yml/badge.svg)](https://github.com/poly-hammer/BlenderTools/actions/workflows/tests.yml)
 
 A repository of blender addons that improve the game development workflow between Blender and Unreal Engine.
+Note from Nicopara: this is a vibe coded fork designed to work with Unreal Engine 4.27 and Blender 5.1.
+If you have any questions I'm on discord: Nicopara.
 
 ### NOTE: This is a fork of the original [repository by Epic](https://github.com/EpicGamesExt/BlenderTools). 
 This is now maintained by [@JoshQuake](https://github.com/JoshQuake) and volunteers from the community and is not affiliated with Epic Games. 
