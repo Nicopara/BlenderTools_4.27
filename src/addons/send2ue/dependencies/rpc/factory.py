@@ -114,7 +114,7 @@ class RPCFactory:
                 if line.startswith('def '):
                     continue
 
-                if key in re.split('\.|\(| ', line.strip()):
+                if key in re.split(r'\.|\(| ', line.strip()):
                     if os.path.basename(self.file_path) == '__init__.py':
                         base_name = os.path.basename(os.path.dirname(self.file_path))
                     else:
@@ -155,8 +155,9 @@ class RPCFactory:
 
         # remove the doc string
         if doc_string:
-            code = '\n'.join(code).replace(doc_string, '')
-            code = [line for line in code.split('\n') if not all([char == '"' or char == "'" for char in line.strip()])]
+            joined = '\n'.join(code)
+            joined = re.sub(r'\s*("""|\'\'\')[\s\S]*?\1', '', joined, count=1)
+            code = [line for line in joined.split('\n')]
 
         return code
 
