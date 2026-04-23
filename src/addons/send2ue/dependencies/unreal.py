@@ -428,7 +428,7 @@ class Unreal:
             raise RuntimeError(f'The master material "{master_material_path}" does not exist in the project!')
 
         material_instance = unreal.load_asset(material_instance_path)
-        if material_instance and material_instance.__class__.__name__ != 'MaterialInstanceConstant':
+        if material_instance and not isinstance(material_instance, unreal.MaterialInstanceConstant):
             raise RuntimeError(
                 f'The asset "{material_instance_path}" exists and is not a MaterialInstanceConstant asset!'
             )
@@ -459,15 +459,16 @@ class Unreal:
         """
         mesh = Unreal.get_asset(mesh_asset_path)
         if slot_index < 0:
+            unreal.log_warning(f'Invalid material slot index "{slot_index}" on asset "{mesh_asset_path}".')
             return False
 
-        if mesh.__class__.__name__ == 'SkeletalMesh':
+        if isinstance(mesh, unreal.SkeletalMesh):
             materials = list(mesh.materials)
             if slot_index >= len(materials):
                 return False
             materials[slot_index].material_interface = material_interface
             mesh.set_editor_property('materials', materials)
-        elif mesh.__class__.__name__ == 'StaticMesh':
+        elif isinstance(mesh, unreal.StaticMesh):
             static_materials = list(mesh.static_materials)
             if slot_index >= len(static_materials):
                 return False

@@ -33,6 +33,21 @@ class ValidationManager:
                 validator = getattr(self, attribute)
                 self._validators.append(validator)
 
+    @staticmethod
+    def is_using_legacy_fbx_importer():
+        """
+        Checks if Unreal is using the legacy FBX importer.
+
+        Falls back to True when connected to an older/stale Unreal RPC server that does not expose the
+        `is_using_legacy_fbx_importer` remote function yet.
+        """
+        try:
+            return UnrealRemoteCalls.is_using_legacy_fbx_importer()
+        except Exception as error:
+            if 'is_using_legacy_fbx_importer' in str(error):
+                return True
+            raise
+
     def run(self):
         """
         Run the registered validations.
@@ -338,7 +353,7 @@ class ValidationManager:
                     return False
         
         if self.properties.validate_project_settings and self.properties.path_mode != PathModes.SEND_TO_DISK.value:
-            if not UnrealRemoteCalls.is_using_legacy_fbx_importer():
+            if not self.is_using_legacy_fbx_importer():
                 utilities.report_error(
                     "The Legacy FBX Importer must be used instead of Scene Interchange. Please run this command in the "
                     "Unreal Editor: Interchange.FeatureFlags.Import.FBX False. Otherwise, persist this in the project's "
@@ -419,4 +434,3 @@ class ValidationManager:
             )
             return False
         return True
-

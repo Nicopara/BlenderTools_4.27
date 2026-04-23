@@ -13,23 +13,29 @@ class MasterMaterialInstancesExtension(ExtensionBase):
     property_key = 'unreal_master_material'
 
     @staticmethod
-    def get_material_instance_path(mesh_asset_path, material_name):
+    def get_material_instance_path(mesh_asset_path, material_name, slot_index):
         """
         Builds a deterministic material instance asset path for a mesh + material name pair.
 
         :param str mesh_asset_path: The unreal project path to the imported mesh.
         :param str material_name: The blender material name.
+        :param int slot_index: The material slot index on the mesh.
         :return str: The material instance asset path.
         """
+        material_name = material_name.strip()
         material_asset_name = re.sub(
             RegexPresets.INVALID_NAME_CHARACTERS,
             '_',
-            material_name.strip()
+            material_name
         )
         if not material_asset_name:
-            material_asset_name = 'Material'
+            material_asset_name = f'Material_{slot_index}'
 
-        mesh_folder_path, mesh_asset_name = mesh_asset_path.rsplit('/', 1)
+        if '/' in mesh_asset_path:
+            mesh_folder_path, mesh_asset_name = mesh_asset_path.rsplit('/', 1)
+        else:
+            mesh_folder_path = '/Game'
+            mesh_asset_name = mesh_asset_path.strip('/') or f'Mesh_{slot_index}'
         return f'{mesh_folder_path}/MI_{mesh_asset_name}_{material_asset_name}'
 
     def post_import(self, asset_data, properties):
@@ -61,7 +67,11 @@ class MasterMaterialInstancesExtension(ExtensionBase):
             if not master_material_path:
                 continue
 
-            material_instance_path = self.get_material_instance_path(mesh_asset_path, blender_material.name)
+            material_instance_path = self.get_material_instance_path(
+                mesh_asset_path,
+                blender_material.name,
+                slot_index
+            )
             unreal_calls.create_or_update_material_instance_asset(
                 mesh_asset_path,
                 slot_index,
