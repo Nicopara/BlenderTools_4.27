@@ -21,6 +21,7 @@ nav:
     - Affixes: "./extensions/affixes.md"
     - Combine Assets: "./extensions/combine-assets.md"
     - Create Post Import Groom Assets: "./extensions/create-post-import-groom-assets.md"
+    - Master Material Instances: "./extensions/master-material-instances.md"
     - UE to Rigify: "./extensions/ue2rigify.md"
     - Use Immediate Parent Name: "./extensions/use-immediate-parent-name.md"
     - Use Collections as Folders: "./extensions/use-collections-as-folders.md"

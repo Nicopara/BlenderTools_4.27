@@ -415,6 +415,85 @@ class Unreal:
         )
 
     @staticmethod
+    def get_or_create_material_instance(material_instance_path, master_material_path):
+        """
+        Gets or creates a material instance constant and ensures its parent matches the provided material.
+
+        :param str material_instance_path: The unreal project path to the material instance constant.
+        :param str master_material_path: The unreal project path to the master material.
+        :return MaterialInstanceConstant: The material instance constant.
+        """
+        master_material = unreal.load_asset(master_material_path)
+        if not master_material:
+            raise RuntimeError(f'The master material "{master_material_path}" does not exist in the project!')
+
+        material_instance = unreal.load_asset(material_instance_path)
+        if material_instance and material_instance.__class__.__name__ != 'MaterialInstanceConstant':
+            raise RuntimeError(
+                f'The asset "{material_instance_path}" exists and is not a MaterialInstanceConstant asset!'
+            )
+
+        if not material_instance:
+            material_instance = Unreal.create_asset(
+                material_instance_path,
+                unreal.MaterialInstanceConstant,
+                unreal.MaterialInstanceConstantFactoryNew(),
+                unique_name=False
+            )
+
+        if material_instance.get_editor_property('parent') != master_material:
+            material_instance.set_editor_property('parent', master_material)
+
+        unreal.EditorAssetLibrary.save_loaded_asset(material_instance)
+        return material_instance
+
+    @staticmethod
+    def assign_material_to_mesh_slot(mesh_asset_path, slot_index, material_interface):
+        """
+        Assigns a material interface to a static or skeletal mesh slot.
+
+        :param str mesh_asset_path: The unreal project path to the mesh asset.
+        :param int slot_index: The material slot index.
+        :param MaterialInterface material_interface: The material interface to assign.
+        :return bool: Whether assignment succeeded.
+        """
+        mesh = Unreal.get_asset(mesh_asset_path)
+        if slot_index < 0:
+            return False
+
+        if mesh.__class__.__name__ == 'SkeletalMesh':
+            materials = list(mesh.materials)
+            if slot_index >= len(materials):
+                return False
+            materials[slot_index].material_interface = material_interface
+            mesh.set_editor_property('materials', materials)
+        elif mesh.__class__.__name__ == 'StaticMesh':
+            static_materials = list(mesh.static_materials)
+            if slot_index >= len(static_materials):
+                return False
+            static_materials[slot_index].material_interface = material_interface
+            mesh.set_editor_property('static_materials', static_materials)
+        else:
+            return False
+
+        unreal.EditorAssetLibrary.save_loaded_asset(mesh)
+        return True
+
+    @staticmethod
+    def create_or_update_material_instance_asset(mesh_asset_path, slot_index, master_material_path, instance_path):
+        """
+        Creates or updates a material instance constant and assigns it to the given mesh slot.
+
+        :param str mesh_asset_path: The unreal project path to the mesh asset.
+        :param int slot_index: The material slot index.
+        :param str master_material_path: The unreal project path to the master material.
+        :param str instance_path: The unreal project path to the material instance constant.
+        :return bool: Whether assignment succeeded.
+        """
+        material_instance = Unreal.get_or_create_material_instance(instance_path, master_material_path)
+        return Unreal.assign_material_to_mesh_slot(mesh_asset_path, slot_index, material_instance)
+
+    @staticmethod
     def create_binding_asset(groom_asset_path, mesh_asset_path):
         """
         Creates a groom binding asset.
@@ -1284,6 +1363,24 @@ class UnrealRemoteCalls:
 
         unreal_asset = Unreal.create_asset(asset_path, asset_class, factory, unique_name)
         return unreal_asset
+
+    @staticmethod
+    def create_or_update_material_instance_asset(mesh_asset_path, slot_index, master_material_path, instance_path):
+        """
+        Creates or updates a material instance constant and assigns it to a mesh slot.
+
+        :param str mesh_asset_path: The unreal project path to the mesh asset.
+        :param int slot_index: The material slot index.
+        :param str master_material_path: The unreal project path to the master material.
+        :param str instance_path: The unreal project path to the material instance constant.
+        :return bool: Whether assignment succeeded.
+        """
+        return Unreal.create_or_update_material_instance_asset(
+            mesh_asset_path,
+            slot_index,
+            master_material_path,
+            instance_path
+        )
 
     @staticmethod
     def create_binding_asset(groom_asset_path, mesh_asset_path):
