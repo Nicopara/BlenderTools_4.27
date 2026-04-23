@@ -26,7 +26,8 @@ class AssignMasterMaterialInstancesExtension(ExtensionBase):
         if isinstance(override_name, str) and override_name.strip():
             material_instance_name = override_name.strip()
         else:
-            material_instance_name = f'MI_{material.name.strip()}'
+            material_name = material.name.strip()
+            material_instance_name = f'MI_{material_name}'
 
         return re.sub(RegexPresets.INVALID_NAME_CHARACTERS, "_", material_instance_name)
 

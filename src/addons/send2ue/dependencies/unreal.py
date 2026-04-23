@@ -475,7 +475,7 @@ class Unreal:
             )
 
         material_instance = unreal.load_asset(material_instance_asset_path)
-        if material_instance and material_instance.__class__.__name__ != 'MaterialInstanceConstant':
+        if material_instance and not isinstance(material_instance, unreal.MaterialInstanceConstant):
             raise RuntimeError(
                 f'"{material_instance_asset_path}" already exists and is not a MaterialInstanceConstant.'
             )
@@ -517,7 +517,7 @@ class Unreal:
             master_material_asset_path
         )
 
-        if mesh.__class__.__name__ == 'StaticMesh':
+        if isinstance(mesh, unreal.StaticMesh):
             static_materials = list(mesh.get_editor_property('static_materials'))
             if slot_index < 0 or slot_index >= len(static_materials):
                 raise RuntimeError(f'The slot index "{slot_index}" is out of range for "{mesh_asset_path}".')
@@ -525,7 +525,7 @@ class Unreal:
             static_material.set_editor_property('material_interface', material_instance)
             static_materials[slot_index] = static_material
             mesh.set_editor_property('static_materials', static_materials)
-        elif mesh.__class__.__name__ == 'SkeletalMesh':
+        elif isinstance(mesh, unreal.SkeletalMesh):
             materials = list(mesh.get_editor_property('materials'))
             if slot_index < 0 or slot_index >= len(materials):
                 raise RuntimeError(f'The slot index "{slot_index}" is out of range for "{mesh_asset_path}".')
