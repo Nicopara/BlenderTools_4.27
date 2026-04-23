@@ -19,6 +19,7 @@ nav:
     - Extensions: "./customize/extensions.md"
   - Supported Extensions:
     - Affixes: "./extensions/affixes.md"
+    - Assign Master Material Instances: "./extensions/assign-master-material-instances.md"
     - Combine Assets: "./extensions/combine-assets.md"
     - Create Post Import Groom Assets: "./extensions/create-post-import-groom-assets.md"
     - UE to Rigify: "./extensions/ue2rigify.md"

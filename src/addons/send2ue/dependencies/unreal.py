@@ -460,6 +460,85 @@ class Unreal:
             return binding_asset_path
 
     @staticmethod
+    def get_or_create_material_instance(material_instance_asset_path, master_material_asset_path):
+        """
+        Creates (or reuses) a material instance constant and sets its parent to the given master material.
+
+        :param str material_instance_asset_path: The unreal asset path where the material instance should exist.
+        :param str master_material_asset_path: The unreal asset path to the master material.
+        :return object: A material instance constant object.
+        """
+        master_material = unreal.load_asset(master_material_asset_path)
+        if not master_material:
+            raise RuntimeError(
+                f'The master material "{master_material_asset_path}" does not exist in the project.'
+            )
+
+        material_instance = unreal.load_asset(material_instance_asset_path)
+        if material_instance and material_instance.__class__.__name__ != 'MaterialInstanceConstant':
+            raise RuntimeError(
+                f'"{material_instance_asset_path}" already exists and is not a MaterialInstanceConstant.'
+            )
+
+        if not material_instance:
+            asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
+            path, name = material_instance_asset_path.rsplit("/", 1)
+            material_instance = asset_tools.create_asset(
+                asset_name=name,
+                package_path=path,
+                asset_class=unreal.MaterialInstanceConstant,
+                factory=unreal.MaterialInstanceConstantFactoryNew()
+            )
+
+        if material_instance.get_editor_property('parent') != master_material:
+            material_instance.set_editor_property('parent', master_material)
+
+        unreal.EditorAssetLibrary.save_loaded_asset(material_instance)
+        return material_instance
+
+    @staticmethod
+    def assign_material_instance_to_mesh_slot(
+        mesh_asset_path,
+        slot_index,
+        material_instance_asset_path,
+        master_material_asset_path
+    ):
+        """
+        Creates/reuses a material instance and assigns it to a static or skeletal mesh material slot.
+
+        :param str mesh_asset_path: The unreal path to the mesh asset.
+        :param int slot_index: The material slot index.
+        :param str material_instance_asset_path: The unreal path where the material instance should exist.
+        :param str master_material_asset_path: The unreal path to the master material.
+        """
+        mesh = Unreal.get_asset(mesh_asset_path)
+        material_instance = Unreal.get_or_create_material_instance(
+            material_instance_asset_path,
+            master_material_asset_path
+        )
+
+        if mesh.__class__.__name__ == 'StaticMesh':
+            static_materials = list(mesh.get_editor_property('static_materials'))
+            if slot_index < 0 or slot_index >= len(static_materials):
+                raise RuntimeError(f'The slot index "{slot_index}" is out of range for "{mesh_asset_path}".')
+            static_material = static_materials[slot_index]
+            static_material.set_editor_property('material_interface', material_instance)
+            static_materials[slot_index] = static_material
+            mesh.set_editor_property('static_materials', static_materials)
+        elif mesh.__class__.__name__ == 'SkeletalMesh':
+            materials = list(mesh.get_editor_property('materials'))
+            if slot_index < 0 or slot_index >= len(materials):
+                raise RuntimeError(f'The slot index "{slot_index}" is out of range for "{mesh_asset_path}".')
+            skeletal_material = materials[slot_index]
+            skeletal_material.set_editor_property('material_interface', material_instance)
+            materials[slot_index] = skeletal_material
+            mesh.set_editor_property('materials', materials)
+        else:
+            raise RuntimeError(f'"{mesh_asset_path}" is not a static or skeletal mesh.')
+
+        unreal.EditorAssetLibrary.save_loaded_asset(mesh)
+
+    @staticmethod
     def create_blueprint_asset(blueprint_asset_path):
         """
         Creates a blueprint asset at the specified path.
@@ -1064,6 +1143,28 @@ class UnrealRemoteCalls:
             for index, material in enumerate(mesh.static_materials):
                 if material.material_slot_name == material_name:
                     return index
+
+    @staticmethod
+    def assign_material_instance_to_mesh_slot(
+        mesh_asset_path,
+        slot_index,
+        material_instance_asset_path,
+        master_material_asset_path
+    ):
+        """
+        Creates/reuses and assigns a material instance to a mesh slot.
+
+        :param str mesh_asset_path: The unreal path to the mesh asset.
+        :param int slot_index: The material slot index.
+        :param str material_instance_asset_path: The unreal path where the material instance should exist.
+        :param str master_material_asset_path: The unreal path to the master material.
+        """
+        Unreal.assign_material_instance_to_mesh_slot(
+            mesh_asset_path=mesh_asset_path,
+            slot_index=slot_index,
+            material_instance_asset_path=material_instance_asset_path,
+            master_material_asset_path=master_material_asset_path
+        )
 
     @staticmethod
     def get_enabled_plugins():
